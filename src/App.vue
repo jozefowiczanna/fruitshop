@@ -1,184 +1,56 @@
 <template>
   <div id="app">
-    <header class="container">
-
-      <nav class="navbar navbar-light fixed-top">
-        <div class="navbar-text d-flex ml-auto">
-          <div class="dropdown ml-2">
-            <button id="cartDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-success dropdown-toggle" :style="sliderState">
-              <span class="big-badge badge badge-pill badge-light mr-2">{{cartQty | totalFormat(1)}} kg</span>
-              <span>{{cartTotal | totalFormat(2)}} zł</span>
-            </button>
-            <button class="shopping-card btn btn-outline-success bg-white ml-2"
-                  @click="sliderStatus = !sliderStatus">
-                <img class="shopping-card__img pb-1" :src="require('@/assets/img/shopping-cart-solid.svg')" alt="shopping card">
-            </button>
-            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="cartDropdown" :class="checkIfEmpty">
-
-              <div v-for="(item, index) in cart" :key="index">
-                <div class="dropdown-item-text text-nowrap d-flex align-items-center">
-                  <span class="big-badge badge badge-pill badge-warning align-text-top mr-2 ml-auto">{{item.qty | totalFormat(1)}} kg</span>
-                  <span class="">{{item.product.name}}</span>
-                  <b class="mx-2">{{item.product.price * item.qty | totalFormat(2)}} zł</b>
-                  <button
-                    @click.stop="deleteItem(index)"
-                    class="remove-btn"
-                  ></button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </nav>
-
-    </header>
+    <navbar :cart="cart" :cartQty="cartQty" :cartTotal="cartTotal"
+      @delete="deleteItem"></navbar>
     <section class="container">
-      <h1 class="mt-5 mb-4">Fruit Shop</h1>
-      <div class="form-inline my-2">
-        <b>Max cena (zł/kg): </b>
-        <input class="max-input form-control text-center mx-2" maxlength="3"
-          type="text"
-          v-model="maxValue">
-        <input class="max-range custom-range my-3"
-          type="range"
-          min="0" max="10"
-          v-model="maxValue">
-      </div>
-
-      <div class="d-flex mb-5">
-        <b class="mr-3">sortuj wg: </b>
-        <div class="custom-control custom-radio d-flex">
-          <div class="pr-3">
-            <input type="radio" id="price" class="custom-control-input"
-              value="price" v-model="picked">
-            <label for="price" class="custom-control-label">ceny</label>
-          </div>
-          <div class="pl-4">
-            <input type="radio" id="name" class="custom-control-input"
-              value="name" v-model="picked">
-            <label for="name" class="custom-control-label">nazwy</label>
-          </div>
-        </div>
-      </div>
-        
-      <div class="row d-flex flex-wrap">
-        <div class="col-md-6 col-lg-4 mb-5"
-          v-for="(item) in sortProducts"
-          :key="item.id"
-        >
-          <div class="product position-relative">
-            <div class="product__img-wrapper">
-              <div class="product__img" :style="getImg(item.image)"></div>
-            </div>
-            <div class="product__description p-4 d-flex flex-column justify-content-between position-relative">
-              <div class="product__name mt mb-3">{{item.name}}</div>
-              <div class="product__price ml-auto">{{item.price | commaPrice}}<span class="product__currency"> zł</span></div>
-              <button class="add-btn" @click="addItem(item)"></button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <h1 class="mt-5 pt-5 mb-4">Owocowy sklep</h1>
+      <sort-opt
+        :maxValue.sync="maxValue"
+        :picked.sync="picked"
+      ></sort-opt>
+      <product-list
+        :sortProducts="sortProducts"
+        @add="addItem"
+      ></product-list>
     </section>
   </div>
 </template>
 
 <script>
-
-var products = [ 
-        { 
-          "id":"1",
-          "name":"Pomarańcze",
-          "price":"4.90",
-          "image":"oranges.jpg"
-        },
-        { 
-          "id":"2",
-          "name":"Jabłka",
-          "price":"2.50",
-          "image":"apples.jpg"
-        },
-        { 
-          "id":"3",
-          "name":"Gruszki",
-          "price":"2.90",
-          "image":"pears.jpg"
-        },
-        { 
-          "id":"4",
-          "name":"Banany",
-          "price":"5.80",
-          "image":"bananas.jpg"
-        },
-        { 
-          "id":"5",
-          "name":"Truskawki",
-          "price":"6.70",
-          "image":"strawberries.jpg"
-        },
-        { 
-          "id":"6",
-          "name":"Winogrona",
-          "price":"6.90",
-          "image":"grapes.jpg"
-        },
-        { 
-          "id":"7",
-          "name":"Śliwki",
-          "price":"5.50",
-          "image":"plums.jpg"
-        },
-        { 
-          "id":"8",
-          "name":"Jagody",
-          "price":"7.90",
-          "image":"blueberries.jpg"
-        },
-        { 
-          "id":"9",
-          "name":"Brzoskwinie",
-          "price":"7.50",
-          "image":"peaches.jpg"
-        },
-        { 
-          "id":"10",
-          "name":"Maliny",
-          "price":"8.50",
-          "image":"raspberries.jpg"
-        }   
-      ]
+import Navbar from "./components/Navbar.vue";
+import SortOpt from "./components/SortOpt.vue";
+import ProductList from "./components/ProductList.vue";
+import products from "./assets/data/products.json";
 
 export default {
   name: 'app',
+  components: {
+    Navbar,
+    SortOpt,
+    ProductList
+  },
   data() {
     return {
       maxValue: 10,
       totalQty: 0,
       picked: "price",
       products: products,
-      cart: [],
-      sliderStatus: false
+      cart: []
     }
   },
   computed: {
     sortProducts() {
-      var arrayCopy = this.products.slice();
+      const arrayCopy = this.products.slice();
 
       if (this.picked === "name") {
         arrayCopy.sort((a, b) => (a.name < b.name) ? -1 : 1);
       } else {
         arrayCopy.sort((a, b) => (parseFloat(a.price) < parseFloat(b.price)) ? -1 : 0);
       }
-      var max = this.maxValue;
+      const max = this.maxValue;
       return arrayCopy.filter(function(item) {
         return parseInt(item.price) < max;
       })
-    },
-    sliderState() {
-      return this.sliderStatus ? "transform: translateX(150%)" : "transform: translateX(0)";
-    },
-    checkIfEmpty() {
-      return (this.cartQty > 0) ? "visible" : "invisible";
     },
     cartTotal() {
       let sum = 0;
@@ -196,13 +68,14 @@ export default {
     }
   },
   methods: {
-    getImg(img) {
-      var url = require(`@/assets/img/${img}`);
-      return {'background-image': `url('${url}')`};
-    },
-    addItem(product) {
-      var whatProduct = null;
-      var existing = this.cart.filter(function(item, index) {
+    addItem(product, e) {
+      e.target.classList.add("active");
+      setTimeout(() => {
+        e.target.classList.remove("active");
+      }, 100);
+
+      let whatProduct = null;
+      const existing = this.cart.filter(function(item, index) {
         if (item.product.id === product.id) {
           whatProduct = index;
           return true;
@@ -223,14 +96,6 @@ export default {
       } else {
         this.cart.splice(index, 1);
       }
-    }
-  },
-  filters: {
-    commaPrice(value) {
-      return value.replace('.', ',');
-    },
-    totalFormat(value, nr) {
-      return value.toFixed(nr).toString().replace('.', ',');
     }
   }
 }
@@ -316,7 +181,7 @@ export default {
     z-index: 50;
     border: 4px solid white;
     border-radius: 50%;
-    transition: background-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
     outline: none !important;
   }
 
@@ -332,6 +197,10 @@ export default {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+  }
+
+  .add-btn.active {
+    transform: scale(0.93);
   }
 
   .remove-btn {
@@ -373,6 +242,45 @@ export default {
     max-width: 200px !important;
   }
 
+@media (max-width: 767px) {
+  .product-wrapper {
+    border-radius: 0;
+    border-bottom: 1px solid hsla(134, 61%, 41%, 0.3);
+  }
+
+  .product {
+    box-shadow: none;
+  }
+
+  .product-wrapper:hover {
+    background: #f2fdf0;
+  }
+
+  .product__name {
+    font-size: 17px;
+  }
+
+  .product__price {
+    font-size: 18px;
+    border: none;
+    padding: 0;
+    background: none;
+  }
+
+  .product__currency {
+    font-size: 1em;
+  }
+
+  .add-btn {
+    position: relative;
+    top: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border: none;
+    transition: 0.1s;
+  }
+}
 
 </style>
 
