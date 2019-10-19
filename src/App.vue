@@ -1,9 +1,37 @@
 <template>
   <div id="app">
     <header class="container">
-      <nav class="navbar d-flex fixed-top">
-        <button class="btn btn-outline-success bg-white ml-auto">$</button>
+
+      <nav class="navbar navbar-light fixed-top">
+        <div class="navbar-text d-flex ml-auto">
+          <div class="dropdown ml-2">
+            <button id="cartDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-success dropdown-toggle" :style="sliderState">
+              <span class="big-badge badge badge-pill badge-light mr-2">{{cartQty | totalFormat(1)}} kg</span>
+              <span>{{cartTotal | totalFormat(2)}} zł</span>
+            </button>
+            <button class="shopping-card btn btn-outline-success bg-white ml-2"
+                  @click="sliderStatus = !sliderStatus">
+                <img class="shopping-card__img pb-1" :src="require('@/assets/img/shopping-cart-solid.svg')" alt="shopping card">
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="cartDropdown" :class="checkIfEmpty">
+
+              <div v-for="(item, index) in cart" :key="index">
+                <div class="dropdown-item-text text-nowrap d-flex align-items-center">
+                  <span class="big-badge badge badge-pill badge-warning align-text-top mr-2 ml-auto">{{item.qty | totalFormat(1)}} kg</span>
+                  <span class="">{{item.product.name}}</span>
+                  <b class="mx-2">{{item.product.price * item.qty | totalFormat(2)}} zł</b>
+                  <button
+                    @click.stop="deleteItem(index)"
+                    class="remove-btn"
+                  ></button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </nav>
+
     </header>
     <section class="container">
       <h1 class="mt-5 mb-4">Fruit Shop</h1>
@@ -45,8 +73,8 @@
             </div>
             <div class="product__description p-4 d-flex flex-column justify-content-between position-relative">
               <div class="product__name mt mb-3">{{item.name}}</div>
-              <div class="product__price ml-auto">{{item.price}}<span class="product__currency"> zł</span></div>
-              <button class="add-btn"></button>
+              <div class="product__price ml-auto">{{item.price | commaPrice}}<span class="product__currency"> zł</span></div>
+              <button class="add-btn" @click="addItem(item)"></button>
             </div>
           </div>
         </div>
@@ -61,37 +89,37 @@ var products = [
         { 
           "id":"1",
           "name":"Pomarańcze",
-          "price":"4,90",
+          "price":"4.90",
           "image":"oranges.jpg"
         },
         { 
           "id":"2",
           "name":"Jabłka",
-          "price":"2,50",
+          "price":"2.50",
           "image":"apples.jpg"
         },
         { 
           "id":"3",
           "name":"Gruszki",
-          "price":"2,90",
+          "price":"2.90",
           "image":"pears.jpg"
         },
         { 
           "id":"4",
           "name":"Banany",
-          "price":"5,80",
+          "price":"5.80",
           "image":"bananas.jpg"
         },
         { 
           "id":"5",
           "name":"Truskawki",
-          "price":"6,70",
+          "price":"6.70",
           "image":"strawberries.jpg"
         },
         { 
           "id":"6",
           "name":"Winogrona",
-          "price":"6,90",
+          "price":"6.90",
           "image":"grapes.jpg"
         },
         { 
@@ -125,8 +153,11 @@ export default {
   data() {
     return {
       maxValue: 10,
+      totalQty: 0,
       picked: "price",
-      products: products
+      products: products,
+      cart: [],
+      sliderStatus: false
     }
   },
   computed: {
@@ -134,26 +165,72 @@ export default {
       var arrayCopy = this.products.slice();
 
       if (this.picked === "name") {
-
         arrayCopy.sort((a, b) => (a.name < b.name) ? -1 : 1);
       } else {
-        arrayCopy.sort(function(a, b) {
-          var priceA = parseFloat(a.price.replace(',', '.'));
-          var priceB = parseFloat(b.price.replace(',', '.'));
-
-          (priceA < priceB) ? -1 : 0;
-        });
+        arrayCopy.sort((a, b) => (parseFloat(a.price) < parseFloat(b.price)) ? -1 : 0);
       }
       var max = this.maxValue;
       return arrayCopy.filter(function(item) {
         return parseInt(item.price) < max;
       })
+    },
+    sliderState() {
+      return this.sliderStatus ? "transform: translateX(150%)" : "transform: translateX(0)";
+    },
+    checkIfEmpty() {
+      return (this.cartQty > 0) ? "visible" : "invisible";
+    },
+    cartTotal() {
+      let sum = 0;
+      for (let key in this.cart) {
+        sum = sum + (parseFloat(this.cart[key].product.price) * parseFloat(this.cart[key].qty));
+      }
+      return sum;
+    },
+    cartQty() {
+      let qty = 0;
+      for (let key in this.cart) {
+        qty = qty + this.cart[key].qty;
+      }
+      return qty;
     }
   },
   methods: {
     getImg(img) {
       var url = require(`@/assets/img/${img}`);
       return {'background-image': `url('${url}')`};
+    },
+    addItem(product) {
+      var whatProduct = null;
+      var existing = this.cart.filter(function(item, index) {
+        if (item.product.id === product.id) {
+          whatProduct = index;
+          return true;
+        } else {
+          return false;
+        }
+      })
+
+      if (existing.length) {
+        this.cart[whatProduct].qty += 0.5;
+      } else {
+        this.cart.push({product: product, qty: 0.5})
+      }
+    },
+    deleteItem(index) {
+      if (this.cart[index].qty > 0.5) {
+        this.cart[index].qty -= 0.5;
+      } else {
+        this.cart.splice(index, 1);
+      }
+    }
+  },
+  filters: {
+    commaPrice(value) {
+      return value.replace('.', ',');
+    },
+    totalFormat(value, nr) {
+      return value.toFixed(nr).toString().replace('.', ',');
     }
   }
 }
@@ -161,6 +238,19 @@ export default {
 
 <style>
   @import url('https://fonts.googleapis.com/css?family=Montserrat:600&display=swap');
+
+  .big-badge {
+    font-size: 15px !important;
+  }
+
+  .shopping-card__img {
+    width: 20px;
+    height: 20px;
+  }
+
+  #cartDropdown {
+    transition: 0.3s ease-in-out;
+  }
 
   .product {
     box-shadow: 0 10px 50px -25px #89a08d;
@@ -242,6 +332,33 @@ export default {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+  }
+
+  .remove-btn {
+    border: 0;
+    background: #DC3545;
+    color: white;
+    width: 20px;
+    height: 20px;
+    font-size: 20px !important;
+    position: relative;
+    display: block;
+    border-radius: 5px;
+    transition: 0.2s ease-in-out;
+    outline: none !important;
+  }
+
+  .remove-btn:hover {
+    background: #af2c38;
+  }
+
+  .remove-btn::before {
+    content: '-';
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%)
   }
 
   .product__currency {
