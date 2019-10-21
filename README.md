@@ -1,5 +1,7 @@
 # shop
 
+Fruitshop build with Vue
+
 ## Project setup
 ```
 npm install
