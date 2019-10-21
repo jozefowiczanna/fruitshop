@@ -17,7 +17,7 @@
             {{item.price | commaPrice}}
             <span class="product__currency">zł</span>
           </div>
-          <button class="add-btn ml-3 flex-shrink-0" @click="$emit('add', item, $event)"></button>
+          <button class="add-btn ml-3 flex-shrink-0" @click="$parent.$emit('add', item, $event)"></button>
         </div>
       </div>
     </div>

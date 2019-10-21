@@ -1,5 +1,5 @@
 <template>
-  <header class="container">
+  <header>
     <nav class="navbar navbar-light fixed-top">
       <div class="navbar-text d-flex ml-auto">
         <div class="dropdown ml-2">
@@ -11,10 +11,9 @@
             class="btn btn-success dropdown-toggle"
             :style="toggleSliderStatus"
           >
-            <span
-              class="big-badge badge badge-pill badge-light mr-2"
-            >{{cartQty | totalFormat(1)}} kg</span>
-            <span>{{cartTotal | totalFormat(2)}} zł</span>
+            <price class="big-badge badge badge-pill badge-light mr-2"
+              :value="cartQty" :precision="1" :suffix="'kg'"></price>
+            <price :value="cartTotal" :suffix="'zł'"></price>
           </button>
           <button
             class="shopping-card btn btn-outline-success bg-white ml-2"
@@ -33,14 +32,23 @@
           >
             <div v-for="(item, index) in cart" :key="index">
               <div class="dropdown-item-text text-nowrap d-flex align-items-center">
-                <span
-                  class="big-badge badge badge-pill badge-warning align-text-top mr-2 ml-auto"
-                >{{item.qty | totalFormat(1)}} kg</span>
+                <price class="big-badge badge badge-pill badge-warning align-text-top mr-2 ml-auto"
+                  :value="item.qty"
+                  :suffix="'kg'"
+                  :precision="1"
+                ></price>
                 <span class>{{item.product.name}}</span>
-                <b class="mx-2">{{item.product.price * item.qty | totalFormat(2)}} zł</b>
-                <button @click.stop="$emit('delete', index)" class="remove-btn"></button>
+                <price class="font-weight-bold mx-2"
+                  :value="item.product.price * item.qty"
+                  :suffix="'zł'"
+                ></price>
+                <button @click.stop="$parent.$emit('delete', index)" class="remove-btn"></button>
               </div>
             </div>
+            <router-link
+              class="btn btn-sm btn-outline-info text-dark float-right mr-4 mt-2"
+              to="/checkout"
+            >Do kasy</router-link>
           </div>
         </div>
       </div>
@@ -49,6 +57,8 @@
 </template>
 
 <script>
+import Price from "./Price.vue";
+
 export default {
   name: "navbar",
   props: {
@@ -56,6 +66,7 @@ export default {
     cartQty: Number,
     cartTotal: Number
   },
+  components: { Price },
   data() {
     return {
       sliderStatus: false

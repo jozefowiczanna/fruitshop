@@ -1,40 +1,30 @@
 <template>
   <div id="app">
-    <navbar :cart="cart" :cartQty="cartQty" :cartTotal="cartTotal"
-      @delete="deleteItem"></navbar>
-    <section class="container">
-      <h1 class="mt-5 pt-5 mb-4">Owocowy sklep</h1>
-      <sort-opt
-        :maxValue.sync="maxValue"
-        :picked.sync="picked"
-      ></sort-opt>
-      <product-list
-        :sortProducts="sortProducts"
-        @add="addItem"
-      ></product-list>
-    </section>
+    <router-view
+      :cart="cart"
+      :cartQty="cartQty"
+      :cartTotal="cartTotal"
+      :maxValue.sync="maxValue"
+      :products="products"
+      :sortProducts="sortProducts"
+      :picked.sync="picked"
+      @add="addItem"
+      @delete="deleteItem"
+    ></router-view>
   </div>
 </template>
 
 <script>
-import Navbar from "./components/Navbar.vue";
-import SortOpt from "./components/SortOpt.vue";
-import ProductList from "./components/ProductList.vue";
-import products from "./assets/data/products.json";
+import productsData from "./assets/data/productsData.json";
 
 export default {
   name: 'app',
-  components: {
-    Navbar,
-    SortOpt,
-    ProductList
-  },
   data() {
     return {
       maxValue: 10,
       totalQty: 0,
       picked: "price",
-      products: products,
+      products: productsData,
       cart: []
     }
   },

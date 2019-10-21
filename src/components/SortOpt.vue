@@ -5,13 +5,13 @@
       <input class="max-input form-control text-center mx-2" maxlength="3"
         type="text"
         v-model="maxValue"
-        @change="$emit('update:maxValue', maxValue)"
+        @change="$parent.$emit('update:maxValue', maxValue)"
       >
       <input class="max-range custom-range my-3"
         type="range"
         min="0" max="10"
         v-model="maxValue"
-        @input="$emit('update:maxValue', maxValue)"
+        @input="$parent.$emit('update:maxValue', maxValue)"
       >
     </div>
     <div class="d-flex mb-5">
@@ -22,7 +22,7 @@
             type="radio" id="price" class="custom-control-input"
             value="price"
             v-model="picked"
-            @change="$emit('update:picked', picked)"
+            @change="$parent.$emit('update:picked', picked)"
           >
           <label for="price" class="custom-control-label">ceny</label>
         </div>
@@ -30,7 +30,7 @@
           <input type="radio" id="name" class="custom-control-input"
             value="name"
             v-model="picked"
-            @change="$emit('update:picked', picked)"
+            @change="$parent.$emit('update:picked', picked)"
           >
           <label for="name" class="custom-control-label">nazwy</label>
         </div>
