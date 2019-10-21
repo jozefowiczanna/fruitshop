@@ -2,6 +2,8 @@
 
 Fruitshop build with Vue
 
+Photos from Unsplash and Pixabay
+
 ## Project setup
 ```
 npm install
